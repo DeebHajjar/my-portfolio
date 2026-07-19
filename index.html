@@ -41,7 +41,9 @@ a:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
 
 /* status bar */
 .statbar{position:fixed;top:0;left:0;right:0;z-index:10;background:rgba(10,9,6,.85);
-  border-bottom:1px solid rgba(255,176,0,.3);backdrop-filter:blur(6px)}
+  border-bottom:1px solid rgba(255,176,0,.3);backdrop-filter:blur(6px);
+  animation:statin .5s ease .85s both}
+@keyframes statin{from{transform:translateY(-100%);opacity:0}}
 .statbar .in{max-width:880px;margin:0 auto;padding:10px 24px;display:flex;justify-content:space-between;
   font-size:.74rem;color:var(--amber);letter-spacing:.04em}
 .statbar a{color:var(--amber);text-decoration:none}
@@ -52,7 +54,18 @@ a:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
 /* ---------- hero terminal ---------- */
 header{min-height:100vh;display:flex;align-items:center;padding:90px 0 40px}
 .term{width:100%;border:1px solid rgba(255,176,0,.45);background:rgba(12,10,5,.8);
-  box-shadow:0 0 40px rgba(255,176,0,.08),inset 0 0 60px rgba(255,176,0,.03);backdrop-filter:blur(6px)}
+  box-shadow:0 0 40px rgba(255,176,0,.08),inset 0 0 60px rgba(255,176,0,.03);backdrop-filter:blur(6px);
+  animation:crt-on .8s cubic-bezier(.2,.7,.3,1) .15s both}
+/* old CRT power-on: a bright horizontal line that snaps open */
+@keyframes crt-on{
+  0%{transform:scale(0,.004);opacity:0;filter:brightness(6)}
+  10%{opacity:1}
+  40%{transform:scale(1,.004);filter:brightness(6)}
+  70%{transform:scale(1,1.02);filter:brightness(1.8)}
+  100%{transform:none;filter:none}
+}
+header .hero-cta{animation:ctain .6s ease 1.5s both}
+@keyframes ctain{from{opacity:0;transform:translateY(10px)}}
 .term .bar{display:flex;justify-content:space-between;padding:9px 16px;font-size:.72rem;
   border-bottom:1px solid rgba(255,176,0,.3);color:var(--amber)}
 .term .body{padding:26px 26px 30px;min-height:330px}
@@ -69,6 +82,7 @@ header{min-height:100vh;display:flex;align-items:center;padding:90px 0 40px}
 .btn{font-size:.85rem;text-decoration:none;padding:11px 22px;border:1px solid var(--amber);
   color:var(--amber);transition:all .25s;letter-spacing:.03em}
 .btn:hover{background:var(--amber);color:#140e00;box-shadow:0 0 26px rgba(255,176,0,.4)}
+.btn:active{transform:translateY(1px)}
 .btn.solid{background:var(--amber);color:#140e00;font-weight:600}
 .btn.solid:hover{background:var(--amber-hi);border-color:var(--amber-hi)}
 
@@ -79,11 +93,25 @@ section{padding:120px 0}
 h2{font-size:clamp(1.5rem,3.6vw,2.2rem);font-weight:600;color:var(--amber-hi);margin-bottom:38px;
   text-shadow:0 0 22px rgba(255,176,0,.35)}
 h2::before{content:"▚ ";color:var(--amber-dim)}
-.reveal{opacity:0;transform:translateY(30px);transition:opacity .8s ease,transform .8s ease}
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
 .reveal.on{opacity:1;transform:none}
-.box{border:1px solid rgba(255,176,0,.35);background:rgba(12,10,5,.72);padding:28px 30px;
-  backdrop-filter:blur(6px);transition:border-color .3s,box-shadow .3s}
+/* stage label wipes in like it's being typed */
+.reveal .stage{clip-path:inset(0 101% 0 0)}
+.reveal.on .stage{clip-path:inset(0 -2% 0 0);transition:clip-path .9s steps(26,end) .15s}
+/* children of a .stag container land line-by-line, like terminal output */
+.stag>*{opacity:0;transform:translateY(12px);transition:opacity .55s ease,transform .55s cubic-bezier(.2,.7,.2,1);
+  transition-delay:calc(var(--i,0)*75ms + .15s)}
+.sysinfo.stag>*{transition-delay:calc(var(--i,0)*90ms + .5s)}
+.syslog.stag>*{transform:translateX(-18px);transition-delay:calc(var(--i,0)*120ms + .2s)}
+.on.stag>*,.on .stag>*{opacity:1;transform:none}
+.box{position:relative;overflow:hidden;border:1px solid rgba(255,176,0,.35);background:rgba(12,10,5,.72);
+  padding:28px 30px;backdrop-filter:blur(6px);transition:border-color .3s,box-shadow .3s}
 .box:hover{border-color:var(--amber);box-shadow:0 0 34px rgba(255,176,0,.12)}
+/* one phosphor scanline sweeps the box when it powers on */
+.box::after{content:"";position:absolute;left:0;right:0;top:-45%;height:36%;pointer-events:none;opacity:0;
+  background:linear-gradient(180deg,transparent,rgba(255,210,77,.06) 40%,rgba(255,176,0,.14) 50%,rgba(255,210,77,.06) 60%,transparent)}
+.on.box::after,.on .box::after{animation:sweep 1s ease-out .12s forwards}
+@keyframes sweep{0%{top:-45%;opacity:1}100%{top:135%;opacity:0}}
 
 /* about */
 .about p{color:#D9CDA9;margin-bottom:16px}
@@ -101,7 +129,8 @@ h2::before{content:"▚ ";color:var(--amber-dim)}
 .proc h3 a{color:inherit;text-decoration:none}
 .proc h3 a:hover{color:var(--amber-hi);text-shadow:0 0 16px rgba(255,176,0,.5)}
 .proc .stat{font-size:.72rem;padding:2px 10px;border:1px solid currentColor}
-.proc .stat.run{color:var(--ok)}
+.proc .stat.run{color:var(--ok);animation:runpulse 2.6s ease-in-out infinite}
+@keyframes runpulse{50%{box-shadow:0 0 12px rgba(154,205,50,.3);text-shadow:0 0 8px rgba(154,205,50,.6)}}
 .proc .stat.done{color:var(--amber)}
 .proc p{color:#D9CDA9;font-size:.9rem;margin-bottom:12px}
 .proc .flags{font-size:.76rem;color:var(--dim)}
@@ -126,6 +155,8 @@ h2::before{content:"▚ ";color:var(--amber-dim)}
 .syslog .l{padding:8px 0;border-bottom:1px dashed rgba(255,176,0,.18);display:flex;gap:14px;flex-wrap:wrap}
 .syslog .t{color:var(--dim);min-width:52px}
 .syslog .lv{color:var(--ok);min-width:80px}
+.syslog.on .lv{animation:vflash .5s ease calc(var(--i,0)*120ms + .55s) both}
+@keyframes vflash{0%{color:var(--amber-hi);text-shadow:0 0 12px rgba(154,205,50,.9)}100%{color:var(--ok);text-shadow:none}}
 .syslog .m{color:#D9CDA9;flex:1}
 .syslog .m b{color:var(--white);font-weight:600}
 
@@ -142,6 +173,9 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,176,0,.25);padd
 @media(prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
   .reveal{opacity:1;transform:none}
+  .stag>*,.syslog.stag>*{opacity:1;transform:none}
+  .reveal .stage{clip-path:none}
+  .box::after{display:none}
   .crt::after{animation:none}
   html{scroll-behavior:auto}
 }
@@ -182,7 +216,7 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,176,0,.25);padd
 <section id="about">
   <div class="reveal"><div class="stage">[stage 1/4] <b>init</b> — loading operator profile</div>
   <h2>whoami</h2></div>
-  <div class="box about reveal">
+  <div class="box about reveal stag">
     <p><b>Deeb Hajjar</b> — self-taught software developer from Mount Lebanon, running a
     <b>Python/Django core</b> with an AI/ML specialization compiling in the background.</p>
     <p>I build backends that hold up: REST APIs, PostgreSQL schemas that make sense at 2 AM,
@@ -190,7 +224,7 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,176,0,.25);padd
     My Human Memory Project gives AI a five-layer memory (working, episodic, semantic, procedural,
     personality) with continual-learning consolidation, so the system adapts instead of forgetting.</p>
     <p class="d">// the tunnel behind this page is the pipeline. keep scrolling — you're flying through it.</p>
-    <div class="sysinfo">
+    <div class="sysinfo stag">
       <div class="cell"><div class="k">OS</div><div class="v">Human v22 · Lebanon</div></div>
       <div class="cell"><div class="k">KERNEL</div><div class="v">Python / Django / DRF</div></div>
       <div class="cell"><div class="k">GPU</div><div class="v">scikit-learn · s-transformers</div></div>
@@ -203,20 +237,20 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,176,0,.25);padd
   <div class="reveal"><div class="stage">[stage 2/4] <b>build</b> — active &amp; shipped processes</div>
   <h2>ps aux | grep deeb</h2></div>
 
-  <article class="box proc reveal">
+  <article class="box proc reveal stag">
     <div class="head"><span class="pid">PID 2026-01</span><h3><a href="https://github.com/DeebHajjar/human-memory" target="_blank" rel="noopener">human-memory.service</a></h3><span class="stat run">RUNNING</span></div>
     <p>An open-source, local-first memory layer that gives AI assistants persistent, human-like memory instead of resetting every conversation. Built as a Model Context Protocol (MCP) server, it works with any MCP-compatible model (Claude, GPT, Gemini) and runs entirely offline with zero telemetry. The system uses a layered memory architecture inspired by cognitive science — a Fast Layer for core identity (always loaded), a Warm Layer for context-specific attributes retrieved by semantic relevance, and an Archive layer (SQLite + multilingual sentence-transformer embeddings) for long-term storage — combined with a rule-based forgetting mechanism that scores memories by frequency, recency, and emotional weight, permanently protecting emotionally significant memories while pruning trivial ones over time. To guarantee reliable behavior for non-MCP-native integrations, it includes a deterministic Gateway API that always injects context and auto-stores relevant information, removing the dependency on a model choosing to call a tool. The project is fully documented with an architecture guide, a roadmap, and nine Architecture Decision Records explaining key engineering trade-offs, and is released under the Apache 2.0 license.</p>
     <div class="flags"><i>--with</i> python sqlite sentence-transformers mcp continual-learning</div>
     <a class="lnk" href="https://github.com/DeebHajjar/human-memory" target="_blank" rel="noopener">↳ github.com/DeebHajjar/human-memory</a>
   </article>
 
-  <article class="box proc reveal">
+  <article class="box proc reveal stag">
     <div class="head"><span class="pid">PID 2026-02</span><h3>lb-commerce.service</h3><span class="stat run">RUNNING</span></div>
     <p> A comprehensive Django e-commerce platform built specifically for the Lebanese market, deployed as a single-tenant, self-hosted solution per client. It supports cash-on-delivery only (with a Payment model already in place for adding gateways later), and dual-currency handling — USD as the source of truth, with LBP snapshotted for display at a configurable exchange rate. The platform features a fully bilingual interface (English/Arabic) with complete RTL/LTR support, and a comprehensive admin panel (Site Configuration) that lets the store owner control everything — branding, homepage sections, shipping settings, and feature toggles like inventory and returns — without any redeploy. It also includes an optional inventory module with full stock-movement audit trails and weighted-average costing, along with coupons and a staff analytics dashboard. Built with Django 5.2, PostgreSQL, and Redis, and deployed via Docker Compose behind nginx, with a test suite of 229 tests. <span class="d">// private unit — demo on request</span></p>
     <div class="flags"><i>--with</i> django postgresql analytics docker deployment</div>
   </article>
 
-  <article class="box proc reveal">
+  <article class="box proc reveal stag">
     <div class="head"><span class="pid">PID 2025-03</span><h3><a href="https://github.com/DeebHajjar/learning-academy" target="_blank" rel="noopener">learning-academy.service</a></h3><span class="stat done">EXITED 0</span></div>
     <p>Learning Academy — A comprehensive online learning platform built with Django and Bootstrap 5, 
       featuring course management, a role-based blog system, Stripe payment integration, and multi-language 
@@ -226,7 +260,7 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,176,0,.25);padd
     <a class="lnk" href="https://github.com/DeebHajjar/learning-academy" target="_blank" rel="noopener">↳ github.com/DeebHajjar/learning-academy</a>
   </article>
 
-  <article class="box proc reveal">
+  <article class="box proc reveal stag">
     <div class="head"><span class="pid">PID 2025-04</span><h3><a href="https://github.com/DeebHajjar/api-inventory-ms" target="_blank" rel="noopener">inventory-management-system-api.service</a></h3><span class="stat done">EXITED 0</span></div>
     <p>Inventory Management System API — A Django REST Framework API for managing products, categories, 
       and stock transactions, with real-time inventory tracking, low-stock alerts, token-based authentication, 
@@ -235,7 +269,7 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,176,0,.25);padd
     <a class="lnk" href="https://github.com/DeebHajjar/api-inventory-ms" target="_blank" rel="noopener">↳ github.com/DeebHajjar/api-inventory-ms</a>
   </article>
 
-  <article class="box proc reveal">
+  <article class="box proc reveal stag">
     <div class="head"><span class="pid">PID 2025-07</span><h3><a href="https://github.com/DeebHajjar/react-inventory-ms" target="_blank" rel="noopener">inventory-management-system-react.service</a></h3><span class="stat done">EXITED 0</span></div>
     <p>Inventory Management System (Frontend) — A responsive React application consuming a Django REST Framework API, 
       featuring real-time stock monitoring, low-stock alerts, and interactive analytics dashboards (Recharts) 
@@ -249,7 +283,7 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,176,0,.25);padd
 <section id="skills">
   <div class="reveal"><div class="stage">[stage 3/4] <b>test</b> — resource utilization</div>
   <h2>htop --skills</h2></div>
-  <div class="box htop reveal">
+  <div class="box htop reveal stag">
     <div class="grp">## BACKEND CORE</div>
     <div class="row"><span class="name">python · django · drf</span><div class="meter"><i data-w="94"></i></div><span class="pct">94%</span></div>
     <div class="row"><span class="name">sql · postgresql · sqlite</span><div class="meter"><i data-w="86"></i></div><span class="pct">86%</span></div>
@@ -268,7 +302,7 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,176,0,.25);padd
 <section id="certs">
   <div class="reveal"><div class="stage">[stage 4/4] <b>verify</b> — credential log</div>
   <h2>tail -f /var/log/learning.log</h2></div>
-  <div class="box syslog reveal">
+  <div class="box syslog reveal stag">
     <div class="l"><span class="t">2025</span><span class="lv">[VERIFIED]</span><span class="m"><b>Supervised Machine Learning</b> — Stanford Online × DeepLearning.ai</span></div>
     <div class="l"><span class="t">2025</span><span class="lv">[VERIFIED]</span><span class="m"><b>React &amp; Responsive Web Design</b> — Objectia Academy</span></div>
     <div class="l"><span class="t">2025</span><span class="lv">[VERIFIED]</span><span class="m"><b>Python Programming</b> — Hsoub Academy</span></div>
@@ -280,7 +314,7 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,176,0,.25);padd
   <div class="reveal">
     <div class="stage" style="text-align:center">[deploy] <b>open channel</b></div>
     <h2 style="text-align:center">ssh you@deeb --connect</h2>
-    <div class="box">
+    <div class="box stag">
       <p class="d">// open to backend &amp; AI/ML roles — remote or Lebanon. channel is encrypted with good faith.</p>
       <div class="hero-cta">
         <a class="btn solid" href="mailto:deebhajjar04@gmail.com">mail deebhajjar04@gmail.com</a>
@@ -334,7 +368,7 @@ const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
       else render(`<div class="line">${prompt()}<span class="crsr"></span></div>`);
     }
   }
-  setTimeout(typeCmd,600);
+  setTimeout(typeCmd,1150); /* wait for the CRT power-on to finish */
 })();
 
 /* =============== 3D data tunnel =============== */
@@ -386,12 +420,12 @@ const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
     mouse.y=(e.clientY/innerHeight-.5)*2;
   });
 
-  let scrollT=0;
+  let scrollT=0,depthShown=0;
   const depthEl=document.getElementById('depth');
   addEventListener('scroll',()=>{
     const max=document.body.scrollHeight-innerHeight;
     scrollT=max>0?scrollY/max:0;
-    depthEl.textContent="depth: "+String(Math.round(scrollT*LEN*10)).padStart(4,'0')+" m";
+    if(reduce)depthEl.textContent="depth: "+String(Math.round(scrollT*LEN*10)).padStart(4,'0')+" m";
   },{passive:true});
 
   function resize(){renderer.setSize(innerWidth,innerHeight);
@@ -415,6 +449,9 @@ const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
       if(arr[i*3+2]>camera.position.z+4)arr[i*3+2]=camera.position.z-LEN*.8;
     }
     pg.attributes.position.needsUpdate=true;
+    /* depth readout eases toward the scroll target, like the camera */
+    depthShown+=(scrollT*LEN*10-depthShown)*.08;
+    depthEl.textContent="depth: "+String(Math.round(depthShown)).padStart(4,'0')+" m";
     renderer.render(scene,camera);
     if(!reduce)requestAnimationFrame(animate);
   }
@@ -422,13 +459,51 @@ const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
   else animate();
 })();
 
-/* =============== reveal + meters =============== */
+/* =============== reveal + decode + meters =============== */
+/* index children of .stag containers for staggered line-by-line entry */
+document.querySelectorAll('.stag').forEach(s=>
+  [...s.children].forEach((c,i)=>c.style.setProperty('--i',i)));
+if(!reduce)document.querySelectorAll('.pct').forEach(p=>p.textContent='0%');
+
+/* headings resolve out of phosphor noise, left to right */
+const GLYPHS="█▓▒░<>/\\|#$%&";
+function decode(el){
+  const txt=el.textContent,total=Math.max(12,txt.length*1.7);let f=0;
+  (function step(){
+    f++;
+    const done=Math.min(txt.length,Math.floor(txt.length*f/total));
+    let out=txt.slice(0,done);
+    for(let i=done;i<txt.length;i++)out+=txt[i]===' '?' ':GLYPHS[Math.random()*GLYPHS.length|0];
+    el.textContent=out;
+    if(done<txt.length)setTimeout(step,26);
+  })();
+}
+function countUp(el,target,dur){
+  const t0=performance.now();
+  (function tick(){
+    const p=Math.min(1,(performance.now()-t0)/dur),e=1-Math.pow(1-p,3);
+    el.textContent=Math.round(target*e)+"%";
+    if(p<1)requestAnimationFrame(tick);
+  })();
+}
+
 const io=new IntersectionObserver(es=>es.forEach(e=>{
-  if(e.isIntersecting){
-    e.target.classList.add('on');
-    e.target.querySelectorAll('.meter i').forEach(m=>m.style.width=m.dataset.w+'%');
-    io.unobserve(e.target);
-  }
+  if(!e.isIntersecting)return;
+  const el=e.target;
+  el.classList.add('on');
+  const h2=el.querySelector('h2');
+  if(h2&&!reduce)decode(h2);
+  el.querySelectorAll('.row').forEach((row,i)=>{
+    const m=row.querySelector('.meter i'),pct=row.querySelector('.pct');
+    if(!m||!pct)return;
+    const w=+m.dataset.w;
+    if(reduce){m.style.width=w+'%';return}
+    const d=i*90+400; /* each meter fills just after its row lands */
+    m.style.transitionDelay=d+'ms';
+    m.style.width=w+'%';
+    setTimeout(()=>countUp(pct,w,1400),d);
+  });
+  io.unobserve(el);
 }),{threshold:.12});
 document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 </script>
