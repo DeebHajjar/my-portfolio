@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>deeb@hajjar:~ — Software Developer & AI Engineer</title>
+<meta name="description" content="Portfolio of Deeb Hajjar — a CRT terminal flying through the data pipeline.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0A0906;
+  --amber:#FFB000;
+  --amber-hi:#FFD24D;
+  --amber-dim:#8A6212;
+  --white:#F5EEDC;
+  --dim:#9C8B62;
+  --ok:#9ACD32;
+  --mono:'Fira Code',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--white);font-family:var(--mono);line-height:1.75;overflow-x:hidden;
+  font-size:.95rem}
+::selection{background:var(--amber);color:#140e00}
+a:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+
+#tunnel{position:fixed;inset:0;z-index:0}
+/* CRT scanlines + vignette */
+.crt{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px),
+    radial-gradient(110% 90% at 50% 50%,transparent 55%,rgba(0,0,0,.72) 100%)}
+.crt::after{content:"";position:absolute;inset:0;background:rgba(255,176,0,.025);
+  animation:flick 4.5s steps(2) infinite}
+@keyframes flick{0%,97%{opacity:1}98%{opacity:.6}99%{opacity:1}}
+
+.shell{position:relative;z-index:2}
+.pane{max-width:880px;margin:0 auto;padding:0 24px}
+
+/* status bar */
+.statbar{position:fixed;top:0;left:0;right:0;z-index:10;background:rgba(10,9,6,.85);
+  border-bottom:1px solid rgba(255,176,0,.3);backdrop-filter:blur(6px)}
+.statbar .in{max-width:880px;margin:0 auto;padding:10px 24px;display:flex;justify-content:space-between;
+  font-size:.74rem;color:var(--amber);letter-spacing:.04em}
+.statbar a{color:var(--amber);text-decoration:none}
+.statbar a:hover{color:var(--amber-hi);text-decoration:underline}
+.statbar .links{display:flex;gap:20px}
+#depth{color:var(--dim)}
+
+/* ---------- hero terminal ---------- */
+header{min-height:100vh;display:flex;align-items:center;padding:90px 0 40px}
+.term{width:100%;border:1px solid rgba(255,176,0,.45);background:rgba(12,10,5,.8);
+  box-shadow:0 0 40px rgba(255,176,0,.08),inset 0 0 60px rgba(255,176,0,.03);backdrop-filter:blur(6px)}
+.term .bar{display:flex;justify-content:space-between;padding:9px 16px;font-size:.72rem;
+  border-bottom:1px solid rgba(255,176,0,.3);color:var(--amber)}
+.term .body{padding:26px 26px 30px;min-height:330px}
+.line{white-space:pre-wrap;word-break:break-word}
+.p{color:var(--amber)}
+.o{color:var(--white)}
+.g{color:var(--ok)}
+.d{color:var(--dim)}
+.h{color:var(--amber-hi);font-weight:600}
+.crsr{display:inline-block;width:.6em;height:1.1em;background:var(--amber);vertical-align:text-bottom;
+  animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.hero-cta{margin-top:26px;display:flex;gap:14px;flex-wrap:wrap}
+.btn{font-size:.85rem;text-decoration:none;padding:11px 22px;border:1px solid var(--amber);
+  color:var(--amber);transition:all .25s;letter-spacing:.03em}
+.btn:hover{background:var(--amber);color:#140e00;box-shadow:0 0 26px rgba(255,176,0,.4)}
+.btn.solid{background:var(--amber);color:#140e00;font-weight:600}
+.btn.solid:hover{background:var(--amber-hi);border-color:var(--amber-hi)}
+
+/* ---------- sections as pipeline stages ---------- */
+section{padding:120px 0}
+.stage{font-size:.74rem;color:var(--dim);margin-bottom:8px;letter-spacing:.06em}
+.stage b{color:var(--ok);font-weight:500}
+h2{font-size:clamp(1.5rem,3.6vw,2.2rem);font-weight:600;color:var(--amber-hi);margin-bottom:38px;
+  text-shadow:0 0 22px rgba(255,176,0,.35)}
+h2::before{content:"▚ ";color:var(--amber-dim)}
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .8s ease,transform .8s ease}
+.reveal.on{opacity:1;transform:none}
+.box{border:1px solid rgba(255,176,0,.35);background:rgba(12,10,5,.72);padding:28px 30px;
+  backdrop-filter:blur(6px);transition:border-color .3s,box-shadow .3s}
+.box:hover{border-color:var(--amber);box-shadow:0 0 34px rgba(255,176,0,.12)}
+
+/* about */
+.about p{color:#D9CDA9;margin-bottom:16px}
+.about p b{color:var(--white);font-weight:600}
+.sysinfo{margin-top:26px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.sysinfo .cell{border:1px dashed rgba(255,176,0,.35);padding:14px 16px;font-size:.8rem}
+.sysinfo .k{color:var(--dim);font-size:.68rem;letter-spacing:.1em}
+.sysinfo .v{color:var(--amber);margin-top:4px}
+
+/* projects as processes */
+.proc{margin-bottom:22px;position:relative}
+.proc .head{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:baseline;margin-bottom:10px}
+.proc .pid{color:var(--dim);font-size:.74rem}
+.proc h3{font-size:1.2rem;font-weight:600;color:var(--white)}
+.proc h3 a{color:inherit;text-decoration:none}
+.proc h3 a:hover{color:var(--amber-hi);text-shadow:0 0 16px rgba(255,176,0,.5)}
+.proc .stat{font-size:.72rem;padding:2px 10px;border:1px solid currentColor}
+.proc .stat.run{color:var(--ok)}
+.proc .stat.done{color:var(--amber)}
+.proc p{color:#D9CDA9;font-size:.9rem;margin-bottom:12px}
+.proc .flags{font-size:.76rem;color:var(--dim)}
+.proc .flags i{font-style:normal;color:var(--amber)}
+.proc .lnk{display:inline-block;margin-top:12px;font-size:.8rem;color:var(--ok);text-decoration:none}
+.proc .lnk:hover{text-decoration:underline}
+
+/* skills as htop */
+.htop .row{display:grid;grid-template-columns:210px 1fr 74px;gap:16px;align-items:center;padding:9px 0;
+  border-bottom:1px dashed rgba(255,176,0,.22);font-size:.84rem}
+.htop .row:last-child{border:none}
+.htop .name{color:var(--white)}
+.htop .meter{height:12px;border:1px solid rgba(255,176,0,.4);position:relative;overflow:hidden}
+.htop .meter i{position:absolute;inset:1px auto 1px 1px;width:0;
+  background:repeating-linear-gradient(90deg,var(--amber) 0 6px,transparent 6px 9px);
+  transition:width 1.4s cubic-bezier(.2,.7,.2,1)}
+.htop .pct{color:var(--amber);text-align:right;font-size:.76rem}
+.htop .grp{color:var(--dim);font-size:.7rem;letter-spacing:.12em;padding:16px 0 6px}
+
+/* certs as syslog */
+.syslog{font-size:.82rem}
+.syslog .l{padding:8px 0;border-bottom:1px dashed rgba(255,176,0,.18);display:flex;gap:14px;flex-wrap:wrap}
+.syslog .t{color:var(--dim);min-width:52px}
+.syslog .lv{color:var(--ok);min-width:80px}
+.syslog .m{color:#D9CDA9;flex:1}
+.syslog .m b{color:var(--white);font-weight:600}
+
+/* contact */
+.contact{padding-bottom:150px;text-align:center}
+.contact .box{display:inline-block;text-align:left;max-width:640px;width:100%}
+footer{position:relative;z-index:2;border-top:1px solid rgba(255,176,0,.25);padding:22px;text-align:center;
+  font-size:.72rem;color:var(--dim)}
+
+@media(max-width:720px){
+  .htop .row{grid-template-columns:1fr 1fr 60px}
+  .statbar .links{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  .reveal{opacity:1;transform:none}
+  .crt::after{animation:none}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<canvas id="tunnel" aria-hidden="true"></canvas>
+<div class="crt" aria-hidden="true"></div>
+
+<div class="statbar">
+  <div class="in">
+    <span>deeb@hajjar:~/pipeline</span>
+    <span id="depth">depth: 0000 m</span>
+    <span class="links">
+      <a href="#about">/about</a><a href="#procs">/ps</a><a href="#skills">/htop</a><a href="#contact">/connect</a>
+    </span>
+  </div>
+</div>
+
+<div class="shell">
+
+<header>
+  <div class="pane">
+    <div class="term">
+      <div class="bar"><span>tty1 — deeb@hajjar</span><span>bash 5.2 · 80×24 · CRT-AMBER</span></div>
+      <div class="body" id="tbody"><span class="line"><span class="p">deeb@hajjar:~$ </span><span class="crsr"></span></span></div>
+      <div class="hero-cta" style="padding:0 26px 26px">
+        <a class="btn solid" href="#procs">$ ps -deeb --projects</a>
+        <a class="btn" href="https://github.com/DeebHajjar" target="_blank" rel="noopener">$ git remote -v</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="pane">
+
+<section id="about">
+  <div class="reveal"><div class="stage">[stage 1/4] <b>init</b> — loading operator profile</div>
+  <h2>whoami</h2></div>
+  <div class="box about reveal">
+    <p><b>Deeb Hajjar</b> — self-taught software developer from Mount Lebanon, running a
+    <b>Python/Django core</b> with an AI/ML specialization compiling in the background.</p>
+    <p>I build backends that hold up: REST APIs, PostgreSQL schemas that make sense at 2 AM,
+    payment flows, inventory math. And I build the thing I care about most — <b>machine memory</b>.
+    My Human Memory Project gives AI a five-layer memory (working, episodic, semantic, procedural,
+    personality) with continual-learning consolidation, so the system adapts instead of forgetting.</p>
+    <p class="d">// the tunnel behind this page is the pipeline. keep scrolling — you're flying through it.</p>
+    <div class="sysinfo">
+      <div class="cell"><div class="k">OS</div><div class="v">Human v22 · Lebanon</div></div>
+      <div class="cell"><div class="k">KERNEL</div><div class="v">Python / Django / DRF</div></div>
+      <div class="cell"><div class="k">GPU</div><div class="v">scikit-learn · s-transformers</div></div>
+      <div class="cell"><div class="k">UPTIME</div><div class="v">B.Sc. CS — Fall 2026 →</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="procs">
+  <div class="reveal"><div class="stage">[stage 2/4] <b>build</b> — active &amp; shipped processes</div>
+  <h2>ps aux | grep deeb</h2></div>
+
+  <article class="box proc reveal">
+    <div class="head"><span class="pid">PID 2026-01</span><h3><a href="https://github.com/DeebHajjar/human-memory" target="_blank" rel="noopener">human-memory.service</a></h3><span class="stat run">RUNNING</span></div>
+    <p>An open-source, local-first memory layer that gives AI assistants persistent, human-like memory instead of resetting every conversation. Built as a Model Context Protocol (MCP) server, it works with any MCP-compatible model (Claude, GPT, Gemini) and runs entirely offline with zero telemetry. The system uses a layered memory architecture inspired by cognitive science — a Fast Layer for core identity (always loaded), a Warm Layer for context-specific attributes retrieved by semantic relevance, and an Archive layer (SQLite + multilingual sentence-transformer embeddings) for long-term storage — combined with a rule-based forgetting mechanism that scores memories by frequency, recency, and emotional weight, permanently protecting emotionally significant memories while pruning trivial ones over time. To guarantee reliable behavior for non-MCP-native integrations, it includes a deterministic Gateway API that always injects context and auto-stores relevant information, removing the dependency on a model choosing to call a tool. The project is fully documented with an architecture guide, a roadmap, and nine Architecture Decision Records explaining key engineering trade-offs, and is released under the Apache 2.0 license.</p>
+    <div class="flags"><i>--with</i> python sqlite sentence-transformers mcp continual-learning</div>
+    <a class="lnk" href="https://github.com/DeebHajjar/human-memory" target="_blank" rel="noopener">↳ github.com/DeebHajjar/human-memory</a>
+  </article>
+
+  <article class="box proc reveal">
+    <div class="head"><span class="pid">PID 2026-02</span><h3>lb-commerce.service</h3><span class="stat run">RUNNING</span></div>
+    <p> A comprehensive Django e-commerce platform built specifically for the Lebanese market, deployed as a single-tenant, self-hosted solution per client. It supports cash-on-delivery only (with a Payment model already in place for adding gateways later), and dual-currency handling — USD as the source of truth, with LBP snapshotted for display at a configurable exchange rate. The platform features a fully bilingual interface (English/Arabic) with complete RTL/LTR support, and a comprehensive admin panel (Site Configuration) that lets the store owner control everything — branding, homepage sections, shipping settings, and feature toggles like inventory and returns — without any redeploy. It also includes an optional inventory module with full stock-movement audit trails and weighted-average costing, along with coupons and a staff analytics dashboard. Built with Django 5.2, PostgreSQL, and Redis, and deployed via Docker Compose behind nginx, with a test suite of 229 tests. <span class="d">// private unit — demo on request</span></p>
+    <div class="flags"><i>--with</i> django postgresql analytics docker deployment</div>
+  </article>
+
+  <article class="box proc reveal">
+    <div class="head"><span class="pid">PID 2025-03</span><h3><a href="https://github.com/DeebHajjar/learning-academy" target="_blank" rel="noopener">learning-academy.service</a></h3><span class="stat done">EXITED 0</span></div>
+    <p>Learning Academy — A comprehensive online learning platform built with Django and Bootstrap 5, 
+      featuring course management, a role-based blog system, Stripe payment integration, and multi-language 
+      support (English/Arabic with RTL). Developed as a graduation project for Hsoub Academy's Python Web Development course, 
+      with cloud storage on AWS S3 and PostgreSQL in production.</p>
+    <div class="flags"><i>--with</i> django postgresql stripe lms</div>
+    <a class="lnk" href="https://github.com/DeebHajjar/learning-academy" target="_blank" rel="noopener">↳ github.com/DeebHajjar/learning-academy</a>
+  </article>
+
+  <article class="box proc reveal">
+    <div class="head"><span class="pid">PID 2025-04</span><h3><a href="https://github.com/DeebHajjar/api-inventory-ms" target="_blank" rel="noopener">inventory-management-system-api.service</a></h3><span class="stat done">EXITED 0</span></div>
+    <p>Inventory Management System API — A Django REST Framework API for managing products, categories, 
+      and stock transactions, with real-time inventory tracking, low-stock alerts, token-based authentication, 
+      and Swagger/OpenAPI documentation.</p>
+    <div class="flags"><i>--with</i> python django-rest-framework restful-api</div>
+    <a class="lnk" href="https://github.com/DeebHajjar/api-inventory-ms" target="_blank" rel="noopener">↳ github.com/DeebHajjar/api-inventory-ms</a>
+  </article>
+
+  <article class="box proc reveal">
+    <div class="head"><span class="pid">PID 2025-07</span><h3><a href="https://github.com/DeebHajjar/react-inventory-ms" target="_blank" rel="noopener">inventory-management-system-react.service</a></h3><span class="stat done">EXITED 0</span></div>
+    <p>Inventory Management System (Frontend) — A responsive React application consuming a Django REST Framework API, 
+      featuring real-time stock monitoring, low-stock alerts, and interactive analytics dashboards (Recharts) 
+      with dark/light theming and TanStack Query for optimized data fetching</p>
+    <div class="flags"><i>--with</i> html css js tailwind react </div>
+    <a class="lnk" href="https://github.com/DeebHajjar/react-inventory-ms" target="_blank" rel="noopener">↳ github.com/DeebHajjar/react-inventory-ms</a>
+  </article>
+
+</section>
+
+<section id="skills">
+  <div class="reveal"><div class="stage">[stage 3/4] <b>test</b> — resource utilization</div>
+  <h2>htop --skills</h2></div>
+  <div class="box htop reveal">
+    <div class="grp">## BACKEND CORE</div>
+    <div class="row"><span class="name">python · django · drf</span><div class="meter"><i data-w="94"></i></div><span class="pct">94%</span></div>
+    <div class="row"><span class="name">sql · postgresql · sqlite</span><div class="meter"><i data-w="86"></i></div><span class="pct">86%</span></div>
+    <div class="row"><span class="name">git · github · Docker</span><div class="meter"><i data-w="90"></i></div><span class="pct">90%</span></div>
+    <div class="grp">## AI / ML</div>
+    <div class="row"><span class="name">supervised ml · scikit-learn</span><div class="meter"><i data-w="78"></i></div><span class="pct">78%</span></div>
+    <div class="row"><span class="name">continual learning · rag · mcp</span><div class="meter"><i data-w="82"></i></div><span class="pct">82%</span></div>
+    <div class="row"><span class="name">sentence-transformers</span><div class="meter"><i data-w="80"></i></div><span class="pct">80%</span></div>
+    <div class="grp">## FRONTEND & TOOLS</div>
+    <div class="row"><span class="name">javascript · react</span><div class="meter"><i data-w="70"></i></div><span class="pct">70%</span></div>
+    <div class="row"><span class="name">tailwind · bootstrap 5</span><div class="meter"><i data-w="74"></i></div><span class="pct">74%</span></div>
+    <div class="row"><span class="name">flask · pandas · aws · stripe</span><div class="meter"><i data-w="68"></i></div><span class="pct">68%</span></div>
+  </div>
+</section>
+
+<section id="certs">
+  <div class="reveal"><div class="stage">[stage 4/4] <b>verify</b> — credential log</div>
+  <h2>tail -f /var/log/learning.log</h2></div>
+  <div class="box syslog reveal">
+    <div class="l"><span class="t">2025</span><span class="lv">[VERIFIED]</span><span class="m"><b>Supervised Machine Learning</b> — Stanford Online × DeepLearning.ai</span></div>
+    <div class="l"><span class="t">2025</span><span class="lv">[VERIFIED]</span><span class="m"><b>React &amp; Responsive Web Design</b> — Objectia Academy</span></div>
+    <div class="l"><span class="t">2025</span><span class="lv">[VERIFIED]</span><span class="m"><b>Python Programming</b> — Hsoub Academy</span></div>
+    <div class="l"><span class="t">2024</span><span class="lv">[VERIFIED]</span><span class="m"><b>Computer Science Fundamentals</b> — Hsoub Academy</span></div>
+  </div>
+</section>
+
+<section class="contact" id="contact">
+  <div class="reveal">
+    <div class="stage" style="text-align:center">[deploy] <b>open channel</b></div>
+    <h2 style="text-align:center">ssh you@deeb --connect</h2>
+    <div class="box">
+      <p class="d">// open to backend &amp; AI/ML roles — remote or Lebanon. channel is encrypted with good faith.</p>
+      <div class="hero-cta">
+        <a class="btn solid" href="mailto:deebhajjar04@gmail.com">mail deebhajjar04@gmail.com</a>
+        <a class="btn" href="https://github.com/DeebHajjar" target="_blank" rel="noopener">GitHub</a>
+        <a class="btn" href="https://www.linkedin.com/in/deeb-hajjar-297729325/" target="_blank" rel="noopener">LinkedIn</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<footer>deeb@hajjar:~$ shutdown -h "© 2026 — hand-soldered, phosphor included"</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* =============== typed terminal =============== */
+(function(){
+  const body=document.getElementById('tbody');
+  const script=[
+    {cmd:"whoami",out:[["o","Deeb Hajjar — software developer / AI-ML engineer"]]},
+    {cmd:"cat /etc/motd",out:[["h","Building machines that remember."],["d","Django backends · REST APIs · continual-learning memory systems"]]},
+    {cmd:"systemctl status deeb",out:[["g","● active (open_to_work) — remote or Lebanon"],["d","   Main PID: est. self-taught · Memory: five layers, consolidating"]]},
+    {cmd:"./pipeline --start",out:[["g","pipeline initialized ✓"],["d","scroll ↓ to fly through it"]]},
+  ];
+  if(reduce){
+    body.innerHTML="";
+    script.forEach(s=>{
+      body.innerHTML+=`<div class="line"><span class="p">deeb@hajjar:~$ </span><span class="o">${s.cmd}</span></div>`;
+      s.out.forEach(([c,t])=>body.innerHTML+=`<div class="line"><span class="${c}">${t}</span></div>`);
+    });
+    return;
+  }
+  let si=0,ci=0,html="";
+  function prompt(){return `<span class="p">deeb@hajjar:~$ </span>`}
+  function render(extra){body.innerHTML=html+extra}
+  function typeCmd(){
+    const s=script[si];
+    if(ci<=s.cmd.length){
+      render(`<div class="line">${prompt()}<span class="o">${s.cmd.slice(0,ci)}</span><span class="crsr"></span></div>`);
+      ci++;setTimeout(typeCmd,34+Math.random()*46);
+    }else{
+      html+=`<div class="line">${prompt()}<span class="o">${s.cmd}</span></div>`;
+      s.out.forEach(([c,t])=>html+=`<div class="line"><span class="${c}">${t}</span></div>`);
+      html+=`<div class="line">&nbsp;</div>`;
+      si++;ci=0;
+      if(si<script.length){render("");setTimeout(typeCmd,420)}
+      else render(`<div class="line">${prompt()}<span class="crsr"></span></div>`);
+    }
+  }
+  setTimeout(typeCmd,600);
+})();
+
+/* =============== 3D data tunnel =============== */
+(function(){
+  if(typeof THREE==='undefined')return;
+  const canvas=document.getElementById('tunnel');
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  const scene=new THREE.Scene();
+  scene.fog=new THREE.FogExp2(0x0A0906,.06);
+  const camera=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,.1,120);
+
+  const AMBER=0xFFB000,DIMA=0x6b4c0e;
+  const SEG=42,GAP=3.2,LEN=SEG*GAP;
+
+  /* octagonal wireframe rings */
+  const rings=[];
+  for(let i=0;i<SEG;i++){
+    const geo=new THREE.RingGeometry(3.1,3.14,8);
+    const mat=new THREE.MeshBasicMaterial({color:i%6===0?AMBER:DIMA,side:THREE.DoubleSide,
+      transparent:true,opacity:i%6===0?.75:.4});
+    const r=new THREE.Mesh(geo,mat);
+    r.position.z=-i*GAP;r.rotation.z=i*.12;
+    rings.push(r);scene.add(r);
+  }
+  /* rails */
+  const railMat=new THREE.LineBasicMaterial({color:DIMA,transparent:true,opacity:.5});
+  for(let k=0;k<8;k++){
+    const a=k/8*Math.PI*2+Math.PI/8;
+    const pts=[new THREE.Vector3(Math.cos(a)*3.12,Math.sin(a)*3.12,4),
+               new THREE.Vector3(Math.cos(a)*3.12,Math.sin(a)*3.12,-LEN)];
+    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),railMat));
+  }
+  /* data packets flying past */
+  const PN=420,pg=new THREE.BufferGeometry(),pp=new Float32Array(PN*3),spd=new Float32Array(PN);
+  for(let i=0;i<PN;i++){
+    const a=Math.random()*Math.PI*2,r=.4+Math.random()*2.4;
+    pp[i*3]=Math.cos(a)*r;pp[i*3+1]=Math.sin(a)*r;pp[i*3+2]=-Math.random()*LEN;
+    spd[i]=.08+Math.random()*.3;
+  }
+  pg.setAttribute('position',new THREE.BufferAttribute(pp,3));
+  const packets=new THREE.Points(pg,new THREE.PointsMaterial({color:0xFFD24D,size:.06,
+    transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false}));
+  scene.add(packets);
+
+  const mouse={x:0,y:0};
+  addEventListener('pointermove',e=>{
+    mouse.x=(e.clientX/innerWidth-.5)*2;
+    mouse.y=(e.clientY/innerHeight-.5)*2;
+  });
+
+  let scrollT=0;
+  const depthEl=document.getElementById('depth');
+  addEventListener('scroll',()=>{
+    const max=document.body.scrollHeight-innerHeight;
+    scrollT=max>0?scrollY/max:0;
+    depthEl.textContent="depth: "+String(Math.round(scrollT*LEN*10)).padStart(4,'0')+" m";
+  },{passive:true});
+
+  function resize(){renderer.setSize(innerWidth,innerHeight);
+    camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}
+  addEventListener('resize',resize);resize();
+
+  const clock=new THREE.Clock();
+  function animate(){
+    const t=clock.getElapsedTime();
+    /* camera flies through the tunnel with scroll; mouse steers */
+    const targetZ=2-scrollT*(LEN-14);
+    camera.position.z+=(targetZ-camera.position.z)*.06;
+    camera.position.x+=((mouse.x*1.0)-camera.position.x)*.05;
+    camera.position.y+=((-mouse.y*.8)-camera.position.y)*.05;
+    camera.lookAt(camera.position.x*.35,camera.position.y*.35,camera.position.z-12);
+    rings.forEach((r,i)=>{r.rotation.z=i*.12+t*.05*(i%2?1:-1)});
+    /* recycle packets toward the camera */
+    const arr=pg.attributes.position.array;
+    for(let i=0;i<PN;i++){
+      arr[i*3+2]+=spd[i];
+      if(arr[i*3+2]>camera.position.z+4)arr[i*3+2]=camera.position.z-LEN*.8;
+    }
+    pg.attributes.position.needsUpdate=true;
+    renderer.render(scene,camera);
+    if(!reduce)requestAnimationFrame(animate);
+  }
+  if(reduce){camera.position.set(0,0,2);camera.lookAt(0,0,-12);renderer.render(scene,camera)}
+  else animate();
+})();
+
+/* =============== reveal + meters =============== */
+const io=new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){
+    e.target.classList.add('on');
+    e.target.querySelectorAll('.meter i').forEach(m=>m.style.width=m.dataset.w+'%');
+    io.unobserve(e.target);
+  }
+}),{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
